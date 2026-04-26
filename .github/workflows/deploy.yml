@@ -164,6 +164,7 @@ jobs:
 
       - name: Prepare standalone PM2 config
         run: |
+          mkdir -p pm2
           curl -sL https://raw.githubusercontent.com/db52/yohaku-deploy-action/main/pm2/ecosystem.config.js -o pm2/ecosystem.config.js
           cp pm2/ecosystem.config.js ecosystem.config.js
 
