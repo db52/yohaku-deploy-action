@@ -163,7 +163,9 @@ jobs:
         run: mv assets/release.zip release.zip
 
       - name: Prepare standalone PM2 config
-        run: cp pm2/ecosystem.config.js ecosystem.config.js
+        run: |
+          curl -sL https://raw.githubusercontent.com/db52/yohaku-deploy-action/main/pm2/ecosystem.config.js -o pm2/ecosystem.config.js
+          cp pm2/ecosystem.config.js ecosystem.config.js
 
       - name: copy file via ssh password
         uses: appleboy/scp-action@v0.1.7
