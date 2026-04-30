@@ -273,7 +273,7 @@ jobs:
   notify:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [store]
+    needs: [store, check]
     if: always()
     steps:
       - name: Notify Telegram
@@ -282,10 +282,12 @@ jobs:
             echo "TELEGRAM_BOT_TOKEN not set, skipping"
             exit 0
           fi
-          STATUS="${{ needs.store.result }}"
-          TEXT="🚀 yohaku 构建完成，最终状态: $STATUS"
-          if [ "$STATUS" == "success" ]; then
-            TEXT="✅ yohaku 部署成功！commit: ${{ needs.build.outputs.sha_short }}"
+          STORE_RESULT="${{ needs.store.result }}"
+          CHECK_CANCELED="${{ needs.check.outputs.canceled }}"
+          if [ "$CHECK_CANCELED" == "true" ]; then
+            TEXT="ℹ️ yohaku 无需更新（hash 未变，跳过构建）"
+          elif [ "$STORE_RESULT" == "success" ]; then
+            TEXT="✅ yohaku 部署成功！"
           else
             TEXT="❌ yohaku 部署失败，请查看: https://github.com/${{ github.repository }}/actions"
           fi
