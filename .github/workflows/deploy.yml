@@ -36,7 +36,7 @@ jobs:
       - name: Read HASH_FILE content
         id: read_hash
         run: |
-          content=$(cat ${{ env.HASH_FILE }}) || true
+          content=$(cat $HASH_FILE) || true
           echo "hash_content=$content" >> "$GITHUB_OUTPUT"
   check:
     name: Check Should Rebuild
@@ -61,8 +61,8 @@ jobs:
         run: |
           file_hash=$FILE_HASH
           current_hash=$(git rev-parse --short HEAD)
-          echo "File Hash: $file_hash"
-          echo "Current Git Hash: $current_hash"
+          echo "Last deployed Yohaku commit: $file_hash"
+          echo "Current Yohaku HEAD: $current_hash"
           if [ "$file_hash" == "$current_hash" ]; then
             echo "Hashes match. Stopping workflow."
             echo "canceled=true" >> $GITHUB_OUTPUT
