@@ -277,29 +277,30 @@ jobs:
     if: always()
     steps:
       - name: Notify Telegram
+        env:
+          SHA_SHORT: ${{ needs.build.outputs.sha_short }}
+          WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SOURCE_LINK: https://github.com/${{ env.SOURCE_REPO }}/commit/$SHA_SHORT
+          BUILD_TIME: ${{ fromJSON('{"true":"","false":"' + github.event.repository.updated_at + '"}')[needs.store.result == 'skipped'] }}
         run: |
           if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
             echo "TELEGRAM_BOT_TOKEN not set, skipping"
             exit 0
           fi
+
+          BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           STORE_RESULT="${{ needs.store.result }}"
           CHECK_CANCELED="${{ needs.check.outputs.canceled }}"
-          BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           SHA_SHORT="${{ needs.build.outputs.sha_short }}"
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           SOURCE_LINK="https://github.com/${{ env.SOURCE_REPO }}/commit/$SHA_SHORT"
 
           if [ "$CHECK_CANCELED" == "true" ]; then
-            TEXT="ℹ️ <b>yohaku</b> 无需更新（hash 未变，跳过构建）
-🕐 $BUILD_TIME"
+            TEXT=$(echo -e "ℹ️ <b>yohaku</b> 无需更新（hash 未变，跳过构建）\n🕐 $BUILD_TIME")
           elif [ "$STORE_RESULT" == "success" ]; then
-            TEXT="✅ <b>yohaku</b> 部署成功！
-🔗 <a href=\"$SOURCE_LINK\">${{ env.SOURCE_REPO }} @ $SHA_SHORT</a>
-🕐 $BUILD_TIME
-⚙️ <a href=\"$WORKFLOW_URL\">查看 Workflow</a>"
+            TEXT=$(echo -e "✅ <b>yohaku</b> 部署成功！\n🔗 <a href=\"$SOURCE_LINK\">${{ env.SOURCE_REPO }} @ $SHA_SHORT</a>\n🕐 $BUILD_TIME\n⚙️ <a href=\"$WORKFLOW_URL\">查看 Workflow</a>")
           else
-            TEXT="❌ <b>yohaku</b> 部署失败
-🔗 <a href=\"$WORKFLOW_URL\">查看 Workflow</a>"
+            TEXT=$(echo -e "❌ <b>yohaku</b> 部署失败\n🔗 <a href=\"$WORKFLOW_URL\">查看 Workflow</a>")
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
