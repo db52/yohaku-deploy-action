@@ -277,11 +277,6 @@ jobs:
     if: always()
     steps:
       - name: Notify Telegram
-        env:
-          SHA_SHORT: ${{ needs.build.outputs.sha_short }}
-          WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          SOURCE_LINK: https://github.com/${{ env.SOURCE_REPO }}/commit/$SHA_SHORT
-          BUILD_TIME: ${{ fromJSON('{"true":"","false":"' + github.event.repository.updated_at + '"}')[needs.store.result == 'skipped'] }}
         run: |
           if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
             echo "TELEGRAM_BOT_TOKEN not set, skipping"
