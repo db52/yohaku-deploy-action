@@ -273,7 +273,7 @@ jobs:
   notify:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [store, check]
+    needs: [store, check, build]
     if: always()
     steps:
       - name: Notify Telegram
@@ -287,15 +287,29 @@ jobs:
           STORE_RESULT="${{ needs.store.result }}"
           CHECK_CANCELED="${{ needs.check.outputs.canceled }}"
           SHA_SHORT="${{ needs.build.outputs.sha_short }}"
+          BRANCH="${{ needs.build.outputs.branch }}"
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           SOURCE_LINK="https://github.com/${{ env.SOURCE_REPO }}/commit/$SHA_SHORT"
 
           if [ "$CHECK_CANCELED" == "true" ]; then
             TEXT=$(echo -e "ℹ️ <b>yohaku</b> 无需更新（hash 未变，跳过构建）\n🕐 $BUILD_TIME")
           elif [ "$STORE_RESULT" == "success" ]; then
-            TEXT=$(echo -e "✅ <b>yohaku</b> 部署成功！\n🔗 <a href=\"$SOURCE_LINK\">${{ env.SOURCE_REPO }} @ $SHA_SHORT</a>\n🕐 $BUILD_TIME\n⚙️ <a href=\"$WORKFLOW_URL\">查看 Workflow</a>")
+            TEXT=$(printf "✅ <b>yohaku</b> 部署成功\n\n📦 镜像\n• ghcr.io/%s/yohaku:latest\n• ghcr.io/%s/yohaku:%s\n\n📎 应用源码\n%s @ %s · %s\n\n🔧 编排仓库 / CI 上下文\n• 仓库: %s\n• 分支 / ref: %s\n• 触发者: %s\n• Workflow: %s · #%s\n\n🕐 完成时间（UTC）\n%s\n\n🔗 <a href=\"%s\">在 GitHub Actions 打开本次运行</a>" \
+              "${{ env.SOURCE_REPO }}" \
+              "${{ env.SOURCE_REPO }}" \
+              "$SHA_SHORT" \
+              "${{ env.SOURCE_REPO }}" \
+              "$SHA_SHORT" \
+              "$SHA_SHORT" \
+              "${{ github.repository }}" \
+              "$BRANCH" \
+              "${{ github.actor }}" \
+              "${{ github.workflow }}" \
+              "${{ github.run_id }}" \
+              "$BUILD_TIME" \
+              "$WORKFLOW_URL")
           else
-            TEXT=$(echo -e "❌ <b>yohaku</b> 部署失败\n🔗 <a href=\"$WORKFLOW_URL\">查看 Workflow</a>")
+            TEXT=$(echo -e "❌ <b>yohaku</b> 部署失败\n🔗 <a href=\"$WORKFLOW_URL\">在 GitHub Actions 打开本次运行</a>")
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
