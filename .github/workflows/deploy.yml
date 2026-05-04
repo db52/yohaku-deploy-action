@@ -284,13 +284,24 @@ jobs:
           fi
           STORE_RESULT="${{ needs.store.result }}"
           CHECK_CANCELED="${{ needs.check.outputs.canceled }}"
+          BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          SHA_SHORT="${{ needs.build.outputs.sha_short }}"
+          WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SOURCE_LINK="https://github.com/${{ env.SOURCE_REPO }}/commit/$SHA_SHORT"
+
           if [ "$CHECK_CANCELED" == "true" ]; then
-            TEXT="ℹ️ yohaku 无需更新（hash 未变，跳过构建）"
+            TEXT="ℹ️ <b>yohaku</b> 无需更新（hash 未变，跳过构建）
+🕐 $BUILD_TIME"
           elif [ "$STORE_RESULT" == "success" ]; then
-            TEXT="✅ yohaku 部署成功！"
+            TEXT="✅ <b>yohaku</b> 部署成功！
+🔗 <a href=\"$SOURCE_LINK\">${{ env.SOURCE_REPO }} @ $SHA_SHORT</a>
+🕐 $BUILD_TIME
+⚙️ <a href=\"$WORKFLOW_URL\">查看 Workflow</a>"
           else
-            TEXT="❌ yohaku 部署失败，请查看: https://github.com/${{ github.repository }}/actions"
+            TEXT="❌ <b>yohaku</b> 部署失败
+🔗 <a href=\"$WORKFLOW_URL\">查看 Workflow</a>"
           fi
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHANNEL_ID }}" \
             -d "text=$TEXT" \
